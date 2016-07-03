@@ -10,4 +10,4 @@ Fork and clone this GitHub repository.
 ## Possible Upgrades
   1. Home screen
   2. Multiple levels/difficulties
-  3. More detailed game over and game one screens
+  3. More detailed game over and game won screens
