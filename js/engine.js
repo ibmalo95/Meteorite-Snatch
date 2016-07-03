@@ -25,7 +25,7 @@ var Engine = (function(global) {
         ctx = canvas.getContext('2d'),
         lastTime;
 
-    canvas.width = 505;
+    canvas.width = 707;
     canvas.height = 606;
     doc.body.appendChild(canvas);
 
@@ -64,7 +64,6 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
-        reset();
         lastTime = Date.now();
         main();
     }
@@ -80,7 +79,40 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
+        checkStarGrabs();
+    }
+
+    // check collisions with enemies
+    function checkCollisions() {
+      var xplayer = player.x;
+      var yplayer = player.y
+      for (var i = 0; i < allEnemies.length; i++) {
+        if ((xplayer + 67) >= (allEnemies[i].x) && (xplayer) <= (allEnemies[i].x + 101) && (yplayer + 65) >= (allEnemies[i].y) && (yplayer) <= (allEnemies[i].y + 28)) {
+          player.x = 200;
+          player.y = 390;
+          player.lives--;
+        }
+      }
+    }
+    // check if a player or enemy touches a star.
+    function checkStarGrabs() {
+      var xplayer = player.x;
+      var yplayer = player.y
+      // Player touches star
+      if ((xplayer + 67) >= (star.x) && (xplayer) <= (star.x + 101) && (yplayer + 77) >= (star.y) && (yplayer) <= (star.y + 28)) {
+        // update the star location and increment players score
+        star.update();
+        player.score++;
+      }
+      // Enemy touches star
+      for (var i = 0; i < allEnemies.length; i++) {
+        if ((allEnemies[i].x + 67) >= (star.x) && (allEnemies[i].x) <= (star.x + 101) && (allEnemies[i].y + 77) >= (star.y) && (allEnemies[i].y) <= (star.y + 28)) {
+          // update star location and increment enemy score
+          star.update();
+          enemyScore++;
+        }
+      }
     }
 
     /* This is called by the update function and loops through all of the
@@ -104,19 +136,40 @@ var Engine = (function(global) {
      * they are just drawing the entire screen over and over.
      */
     function render() {
+      // TODO add a new game/starting screen
+      // When the player collects 20 stars call the won function.
+      if (player.score >= 20) {
+        // game won
+        won();
+      }
+      /* When the enemy collects 20 stars or the player loses all of their
+       * lives the reset function is called.
+       */
+      else if (enemyScore >= 20 || player.lives <= 0) {
+        // game over
+        reset();
+      }
+      else {
+        // layout for the stars, lives, and enemy captured stars.
+        ctx.clearRect(0,0,707, 606);
+        ctx.font = "30px sans-serif";
+        ctx.fillStyle = "#ff0";
+        ctx.fillText("Stars: " + player.score, 1, 35);
+        ctx.fillText("Captured Stars: " + enemyScore, 430, 35);
+        ctx.fillText("Lives: " + player.lives, 130, 35);
         /* This array holds the relative URL to the image used
          * for that particular row of the game level.
          */
         var rowImages = [
-                'images/water-block.png',   // Top row is water
+                'images/grass-block.png',    // Row 2 of 2 of grass
                 'images/stone-block.png',   // Row 1 of 3 of stone
                 'images/stone-block.png',   // Row 2 of 3 of stone
-                'images/stone-block.png',   // Row 3 of 3 of stone
-                'images/grass-block.png',   // Row 1 of 2 of grass
+                'images/stone-block.png',   // Row 2 of 3 of stone
+                'images/stone-block.png',   // Row 2 of 3 of stone
                 'images/grass-block.png'    // Row 2 of 2 of grass
             ],
             numRows = 6,
-            numCols = 5,
+            numCols = 7,
             row, col;
 
         /* Loop through the number of rows and columns we've defined above
@@ -135,8 +188,8 @@ var Engine = (function(global) {
                 ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
             }
         }
-
         renderEntities();
+      }
     }
 
     /* This function is called by the render function and is called on each game
@@ -150,16 +203,25 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
-
         player.render();
+        star.render();
     }
-
-    /* This function does nothing but it could have been a good place to
-     * handle game reset states - maybe a new game menu or a game over screen
-     * those sorts of things. It's only called once by the init() method.
+    /*
+    * This function brings up the screen stating the player won.
+    */
+    function won() {
+      ctx.clearRect(0,0,707, 606);
+      ctx.font = "100px sans-serif";
+      ctx.fillStyle = "#ff0";
+      ctx.fillText("You Win!", 150, 200);
+    }
+    /* This function brings up the screen stating the player lost.
      */
     function reset() {
-        // noop
+      ctx.clearRect(0,0,707, 606);
+      ctx.font = "100px sans-serif";
+      ctx.fillStyle = "#ff0";
+      ctx.fillText("Game Over!", 85, 200);
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -168,10 +230,10 @@ var Engine = (function(global) {
      */
     Resources.load([
         'images/stone-block.png',
-        'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-horn-girl.png',
+        'images/Star.png'
     ]);
     Resources.onReady(init);
 
